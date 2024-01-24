@@ -9,13 +9,7 @@ from typing import Any
 import pygame
 from pygame.sprite import Sprite
 
-
-class MoveDirection:
-    """移动方向"""
-    UP = "up"
-    DOWN = "down"
-    LEFT = "left"
-    RIGHT = "right"
+from src.game_settings import MoveDirection
 
 
 class BaseSprite(Sprite):
@@ -43,7 +37,7 @@ class BaseSprite(Sprite):
 class DragonSprite(BaseSprite):
     """小鲤鱼（龙）"""
     init_hp = 30
-    init_speed = 1
+    init_speed = 5
 
     def __init__(self, image_path):
         super().__init__(image_path)
@@ -51,6 +45,7 @@ class DragonSprite(BaseSprite):
         self.attack_value = 10
         self.defense_value = 5
         self.speed = self.level * self.init_speed
+        self.move_direct = MoveDirection.LEFT
 
 
 class FishSprite(BaseSprite):
@@ -59,7 +54,7 @@ class FishSprite(BaseSprite):
     init_score = 20
     init_attack_value = 5
     init_defense_value = 3
-    init_speed = 1
+    init_speed = 1.5
 
     def __init__(self, image_path):
         super().__init__(image_path)

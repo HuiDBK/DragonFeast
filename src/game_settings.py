@@ -10,8 +10,6 @@ import pygame
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
-
 # 游戏标题
 GAME_TITLE = "小鲤鱼寻宝记"
 
@@ -30,8 +28,15 @@ FISH_DIR = os.path.join(IMAGES_DIR, "fish")
 # 游戏主角色
 PLAYER_IMG = os.path.join(IMAGES_DIR, "fish_player.png")
 
-
 # 游戏背景图
 BG_IMAGES = [
     *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg_blue.png"))] * 5,
 ]
+
+
+class MoveDirection:
+    """移动方向"""
+    UP = "up"
+    DOWN = "down"
+    LEFT = "left"
+    RIGHT = "right"

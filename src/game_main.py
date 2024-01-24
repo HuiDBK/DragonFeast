@@ -10,6 +10,7 @@ import sys
 import pygame
 from pygame import Surface
 import game_settings
+from src.game_settings import MoveDirection
 from src.game_sprites import DragonSprite, FishSprite, ObstacleSprite, TreasureSprite, BaseSprite
 
 
@@ -87,22 +88,53 @@ class DragonFeast:
 
         self.game_sprites.add(self.dragon_sprite)
 
+
+    def move_dragon(self):
+
+        # 移动小龙
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            if self.dragon_sprite.move_direct == MoveDirection.RIGHT:
+                # 右 -> 左 反转
+                self.dragon_sprite.image = pygame.transform.flip(self.dragon_sprite.image, True, False)
+            self.dragon_sprite.move_direct = MoveDirection.LEFT
+            self.dragon_sprite.rect.x -= self.dragon_sprite.speed
+
+        if keys[pygame.K_RIGHT]:
+            if self.dragon_sprite.move_direct == MoveDirection.LEFT:
+                # 左 -> 右 反转
+                self.dragon_sprite.image = pygame.transform.flip(self.dragon_sprite.image, True, False)
+            self.dragon_sprite.move_direct = MoveDirection.RIGHT
+            self.dragon_sprite.rect.x += self.dragon_sprite.speed
+
+        if keys[pygame.K_UP]:
+
+            if self.dragon_sprite.move_direct in [MoveDirection.LEFT, MoveDirection.RIGHT]:
+                self.dragon_sprite.image = pygame.transform.rotozoom(self.dragon_sprite.image, -30, 1)
+
+            if self.dragon_sprite.move_direct == MoveDirection.DOWN:
+                # 下 -> 上 旋转 270 度
+                self.dragon_sprite.image = pygame.transform.rotozoom(self.dragon_sprite.image, 270, 1)
+
+            self.dragon_sprite.move_direct = MoveDirection.UP
+            self.dragon_sprite.rect.y -= self.dragon_sprite.speed
+
+        if keys[pygame.K_DOWN]:
+            if self.dragon_sprite.move_direct == MoveDirection.UP:
+                # 上 -> 下 旋转 270 度
+                self.dragon_sprite.image = pygame.transform.rotozoom(self.dragon_sprite.image, 90, 1)
+
+            self.dragon_sprite.move_direct = MoveDirection.DOWN
+            self.dragon_sprite.rect.y += self.dragon_sprite.speed
+
     def _event_handle(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-        # # 移动小龙
-        # keys = pygame.key.get_pressed()
-        # if keys[pygame.K_LEFT]:
-        #     dragon.rect.x -= 5
-        # if keys[pygame.K_RIGHT]:
-        #     dragon.rect.x += 5
-        # if keys[pygame.K_UP]:
-        #     dragon.rect.y -= 5
-        # if keys[pygame.K_DOWN]:
-        #     dragon.rect.y += 5
+        # 移动小龙
+        self.move_dragon()
 
     def draw_game_sprite(self):
         self.game_sprites.draw(self.game_screen)
