@@ -3,6 +3,7 @@
 # @Author: Hui
 # @Desc: { 游戏精灵 }
 # @Date: 2024/01/22 15:48
+import math
 import random
 from typing import Any
 
@@ -12,7 +13,7 @@ from pygame.sprite import Sprite
 from src.game_settings import MoveDirection
 
 
-class BaseSprite(Sprite):
+class BaseGameSprite(Sprite):
     init_hp = 0
 
     def __init__(self, image_path):
@@ -27,17 +28,53 @@ class BaseSprite(Sprite):
         self.score = 0
         self.lucky_value = 0
         self.hp = self.init_hp * self.level
+        self.original_image = self.image  # 记录原始图
+
+        # 游动效果的帧计数
+        self.frame_count = 0
 
     def random_pos(self, game_width, game_height):
         """随机位置"""
         self.rect.x = random.randint(0, game_width)
         self.rect.y = random.randint(0, game_height)
 
+    def move_animate(self, use_original_image=True):
+        """
+        模拟游动特效
+        Args:
+            use_original_image: 是否使用原图，由于DragonSprite每帧都会根据朝向换图，原图又一直是向左的故不能使用原图
+        """
+        image = self.image
+        if use_original_image:
+            image = self.original_image
 
-class DragonSprite(BaseSprite):
+        # 添加游动的效果
+        if self.frame_count % 10 == 0:
+            # 每隔一定帧数切换图像
+            # self.image = pygame.transform.flip(self.image, True, False)  # 反转模拟游动
+
+            scale_factor = 1
+            self.image = pygame.transform.rotozoom(image, 1, scale_factor)  # 缩放、旋转1度模拟游动
+
+        else:
+            # 还原
+            self.image = image
+
+        self.frame_count += 1
+        if self.frame_count >= 60:
+            # 重置帧计数
+            self.frame_count = 0
+
+
+class DragonSprite(BaseGameSprite):
     """小鲤鱼（龙）"""
     init_hp = 30
     init_speed = 5
+
+    distance_threshold = 1e-6
+
+    # 设置一个足够小的值，表示小龙已经非常接近目标点
+    close_enough_threshold = 3
 
     def __init__(self, image_path):
         super().__init__(image_path)
@@ -47,8 +84,113 @@ class DragonSprite(BaseSprite):
         self.speed = self.level * self.init_speed
         self.move_direct = MoveDirection.LEFT
 
+        # 初始化各个方位的图像
+        self.images = {
+            MoveDirection.LEFT: self.image,
+            MoveDirection.RIGHT: pygame.transform.flip(self.image, True, False),
+            MoveDirection.UP: pygame.transform.rotozoom(self.image, -30, 1),
+            MoveDirection.DOWN: pygame.transform.rotozoom(self.image, 30, 1),
+            MoveDirection.RIGHT_UP: pygame.transform.flip(pygame.transform.rotozoom(self.image, -30, 1), True, False),
+            MoveDirection.RIGHT_DOWN: pygame.transform.flip(pygame.transform.rotozoom(self.image, 30, 1), True, False),
+        }
 
-class FishSprite(BaseSprite):
+    @staticmethod
+    def calc_direct(x1, y1, x2, y2):
+        """计算方位"""
+        # 计算角度
+        angle = math.degrees(math.atan2(y2 - y1, x2 - x1))
+
+        # 规范化角度到0到360之间
+        angle = (angle + 360) % 360
+        print("angle", angle)
+
+        # 根据角度判断朝向
+        if 22.5 <= angle < 67.5:
+            return MoveDirection.RIGHT_DOWN
+        elif 67.5 <= angle < 112.5:
+            return MoveDirection.DOWN
+        elif 112.5 <= angle < 157.5:
+            return MoveDirection.DOWN
+        elif 157.5 <= angle < 202.5:
+            return MoveDirection.LEFT
+        elif 202.5 <= angle < 247.5:
+            return MoveDirection.UP
+        elif 247.5 <= angle < 292.5:
+            return MoveDirection.UP
+        elif 292.5 <= angle < 337.5:
+            return MoveDirection.RIGHT_UP
+        else:
+            return MoveDirection.RIGHT
+
+    def move_to(self, target):
+        # 计算两点之间的直线路径
+        x1, y1 = self.rect.x, self.rect.y
+        x2, y2 = target
+        distance = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+
+        # print(distance)
+        if distance < self.distance_threshold:
+            # 距离小于阈值直接返回
+            return
+
+        # 如果小龙非常接近目标点，直接返回
+        # print("rect.x", self.rect.x, "rect.y", self.rect.y)
+        # print("target.x", x2, "target.y", y2)
+        if (abs(self.rect.x - x2) < self.close_enough_threshold or
+                abs(self.rect.y - y2) < self.close_enough_threshold):
+            return
+
+        # 计算每个步骤的移动量
+        step_x = (x2 - x1) / distance * self.speed
+        step_y = (y2 - y1) / distance * self.speed
+
+        # 计算方位
+        direct = self.calc_direct(x1, y1, x2, y2)
+        self.move_direct = direct
+
+        # 移动小龙
+        self.rect.x += step_x
+        self.rect.y += step_y
+
+    def move_dragon(self, keys):
+        """移动小龙"""
+
+        if keys[pygame.K_LEFT]:
+            self.move_direct = MoveDirection.LEFT
+            self.rect.x -= self.speed
+
+        if keys[pygame.K_RIGHT]:
+            self.move_direct = MoveDirection.RIGHT
+            self.rect.x += self.speed
+
+        if keys[pygame.K_UP]:
+            if self.move_direct in [MoveDirection.RIGHT, MoveDirection.RIGHT_UP, MoveDirection.RIGHT_DOWN]:
+                # 右上
+                self.move_direct = MoveDirection.RIGHT_UP
+            else:
+                self.move_direct = MoveDirection.UP
+            self.rect.y -= self.speed
+
+        if keys[pygame.K_DOWN]:
+            if self.move_direct in [MoveDirection.RIGHT, MoveDirection.RIGHT_DOWN, MoveDirection.RIGHT_UP]:
+                # 右下
+                self.move_direct = MoveDirection.RIGHT_DOWN
+            else:
+                self.move_direct = MoveDirection.DOWN
+            self.rect.y += self.speed
+
+    def update(self, *args, keys=None, **kwargs):
+
+        self.move_dragon(keys)
+
+        # 根据移动方向更新图像
+        self.image = self.images[self.move_direct]
+
+        # 游动特效
+        self.move_animate(use_original_image=False)
+
+
+class FishSprite(BaseGameSprite):
     """海洋生物"""
     init_hp = 20
     init_score = 20
@@ -77,6 +219,7 @@ class FishSprite(BaseSprite):
 
             # 鱼的素材朝向统一左边，故翻转图像
             self.image = pygame.transform.flip(self.image, True, False)
+            self.original_image = self.image
 
         self.rect.y = random.randint(0, game_height)
 
@@ -87,8 +230,10 @@ class FishSprite(BaseSprite):
         elif self.move_direct == MoveDirection.RIGHT:
             self.rect.x += self.speed
 
+        self.move_animate()
 
-class TreasureSprite(BaseSprite):
+
+class TreasureSprite(BaseGameSprite):
     """宝物"""
     init_score = 10
     init_lucky_value = 5
@@ -99,7 +244,7 @@ class TreasureSprite(BaseSprite):
         self.lucky_value = self.init_lucky_value * self.level
 
 
-class ObstacleSprite(BaseSprite):
+class ObstacleSprite(BaseGameSprite):
     """障碍物"""
 
     def __init__(self, image_path):

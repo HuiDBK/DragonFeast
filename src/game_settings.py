@@ -14,7 +14,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GAME_TITLE = "小鲤鱼寻宝记"
 
 # 游戏屏幕宽高
-GAME_SCREEN = (1600, 800)
+GAME_SCREEN = (1400, 800)
 
 # 游戏帧率
 GAME_FPS = 30
@@ -40,3 +40,7 @@ class MoveDirection:
     DOWN = "down"
     LEFT = "left"
     RIGHT = "right"
+    LEFT_UP = "left_up"
+    LEFT_DOWN = "left_down"
+    RIGHT_UP = "right_up"
+    RIGHT_DOWN = "right_down"
