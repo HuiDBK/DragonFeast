@@ -272,7 +272,7 @@ class ObstacleSprite(BaseGameSprite):
 class RaindropSprite(ObstacleSprite):
     """落雨障碍物"""
     image_path = os.path.join(OBSTACLE_DIR, "雨滴.png")
-    random_num = 50
+    random_num = 35
 
     def __init__(self, image_path=None):
         super().__init__(image_path)
@@ -292,7 +292,7 @@ class FallingRocksSprite(ObstacleSprite):
     image_path = os.path.join(OBSTACLE_DIR, "石头.png")
     random_num = 15
 
-    def __init__(self, image_path):
+    def __init__(self, image_path=None):
         super().__init__(image_path)
         self.attack_value = 5
         self.speed = random.randint(2, 5)
@@ -318,7 +318,7 @@ class WaterVortexSprite(ObstacleSprite):
     image_path = os.path.join(OBSTACLE_DIR, "旋涡.png")
     random_num = 10
 
-    def __init__(self, image_path):
+    def __init__(self, image_path=None):
         super().__init__(image_path)
         self.attack_value = 10
         self.end_frame_count = 2 * GAME_FPS  # 结束的帧数

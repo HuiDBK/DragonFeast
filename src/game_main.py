@@ -35,9 +35,8 @@ class DragonFeast:
         self.game_sprites = pygame.sprite.Group()
 
         self.is_gen_fish = True  # 是否生成鱼
-        self.is_gen_obstacle = True  # 是否生成障碍物
-        self.is_gen_treasure = True  # 是否生成宝物
-        self.is_gen_fish = True  # 是否生成鱼
+        self.is_gen_obstacle = False  # 是否生成障碍物
+        self.is_gen_treasure = False  # 是否生成宝物
         self.is_game_over = False  # 是否游戏结束
 
         # 记录鼠标点击的坐标
@@ -46,7 +45,8 @@ class DragonFeast:
         self.init_game_material()
 
         # 开始游戏时间，用于每隔多久随机生成
-        self.start_time = time.time()
+        self.start_time = int(time.time())
+        self.last_gen_time = int(self.start_time)  # 记录上次生成游戏精灵时间
 
     def init_game_material(self):
         """初始化游戏素材"""
@@ -74,6 +74,8 @@ class DragonFeast:
         """
         if not self.is_gen_fish:
             return
+
+        self.is_gen_fish = False
         high_level = self.game_level + 1
         fish_imgs = get_file_list(os.path.join(game_settings.FISH_DIR, str(self.game_level)))
         high_fish_imgs = get_file_list(os.path.join(game_settings.FISH_DIR, str(high_level)))
@@ -89,12 +91,12 @@ class DragonFeast:
 
             self.game_sprites.add(fish_sprite)
 
-        self.is_gen_fish = False
-
     def random_obstacle(self):
         """随机生成障碍物"""
         if not self.is_gen_obstacle:
             return
+
+        self.is_gen_obstacle = False
 
         obstacle_sprite_cls = random.choice(OBSTACLE_SPRITES)
         for i in range(obstacle_sprite_cls.random_num):
@@ -106,6 +108,8 @@ class DragonFeast:
         """随机生成宝物"""
         if not self.is_gen_treasure:
             return
+
+        self.is_gen_treasure = False
 
     def init_player(self):
         """初始化玩家（小鲤鱼）"""
@@ -207,20 +211,29 @@ class DragonFeast:
 
     def check_random_game_sprite(self):
         """检测是否随机生成游戏精灵"""
-        run_cost_time = int(time.time() - self.start_time) + 1
+        cur_time = int(time.time())
+        run_cost_time = (cur_time - self.start_time) + 1
+
         fish_sprites = self.get_fish_sprites()
         # print("fish_sprites num", len(fish_sprites))
-        if run_cost_time % 10 == 0 or len(fish_sprites) <= 3:
-            # 每隔10秒、少于3只时随机鱼
-            self.is_gen_fish = True
 
-        if run_cost_time % 15 == 0:
-            # 每隔15秒随机障碍物
-            self.is_gen_obstacle = True
+        if cur_time > self.last_gen_time:
+            if run_cost_time % 10 == 0 or len(fish_sprites) <= 3:
+                # 每隔10秒、少于3只时随机鱼
+                print("gen_fish")
+                self.is_gen_fish = True
 
-        if run_cost_time % 26 == 0 or (self.dragon_sprite.score + 1) % 66 == 0:
-            # 宝物每隔26秒、分数整除66，随机掉落宝物
-            self.is_gen_treasure = True
+            if run_cost_time % 15 == 0:
+                # 每隔15秒随机障碍物
+                print("gen_obstacle")
+                self.is_gen_obstacle = True
+
+            if run_cost_time % 26 == 0 or (self.dragon_sprite.score + 1) % 66 == 0:
+                # 宝物每隔26秒、分数整除66，随机掉落宝物
+                print("gen_treasure")
+                self.is_gen_treasure = True
+
+            self.last_gen_time = cur_time
 
     def game_render(self):
         """游戏渲染"""
