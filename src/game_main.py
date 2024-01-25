@@ -75,7 +75,6 @@ class DragonFeast:
         if not self.is_gen_fish:
             return
 
-        self.is_gen_fish = False
         high_level = self.game_level + 1
         fish_imgs = get_file_list(os.path.join(game_settings.FISH_DIR, str(self.game_level)))
         high_fish_imgs = get_file_list(os.path.join(game_settings.FISH_DIR, str(high_level)))
@@ -91,12 +90,12 @@ class DragonFeast:
 
             self.game_sprites.add(fish_sprite)
 
+        self.is_gen_fish = False
+
     def random_obstacle(self):
         """随机生成障碍物"""
         if not self.is_gen_obstacle:
             return
-
-        self.is_gen_obstacle = False
 
         obstacle_sprite_cls = random.choice(OBSTACLE_SPRITES)
         for i in range(obstacle_sprite_cls.random_num):
@@ -104,10 +103,20 @@ class DragonFeast:
             obstacle_sprite.random_pos(self.game_width, self.game_height)
             self.game_sprites.add(obstacle_sprite)
 
+        self.is_gen_obstacle = False
+
     def random_treasure(self, num=1):
         """随机生成宝物"""
         if not self.is_gen_treasure:
             return
+
+        treasure_images = get_file_list(game_settings.TREASURE_DIR)
+        for i in range(num):
+            treasure_img = random.choice(treasure_images)
+            level = random.randint(1, self.game_level + 1)
+            treasure_sprite = TreasureSprite(image_path=treasure_img, level=level)
+            treasure_sprite.random_pos(self.game_width, self.game_height)
+            self.game_sprites.add(treasure_sprite)
 
         self.is_gen_treasure = False
 
@@ -164,10 +173,12 @@ class DragonFeast:
                 self.eat_fish(fish_sprite=collided_sprite)
             elif isinstance(collided_sprite, ObstacleSprite):
                 # 碰到障碍物处理
-                pass
+                self.dragon_sprite.hp -= (collided_sprite.attack_value - self.dragon_sprite.defense_value)
+                collided_sprite.kill()
             elif isinstance(collided_sprite, TreasureSprite):
                 # 吃到宝物处理
-                pass
+                self.dragon_sprite.score += collided_sprite.score
+                self.dragon_sprite.lucky_value += collided_sprite.lucky_value
 
     def game_replay(self):
         """游戏重玩"""

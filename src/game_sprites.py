@@ -39,11 +39,13 @@ class BaseGameSprite(Sprite):
         self.rect.x = random.randint(0, game_width)
         self.rect.y = random.randint(0, game_height)
 
-    def move_animate(self, use_original_image=True):
+    def move_animate(self, use_original_image=True, rotate_angle=1, reverse_image=False):
         """
         模拟游动特效
         Args:
             use_original_image: 是否使用原图，由于DragonSprite每帧都会根据朝向换图，原图又一直是向左的故不能使用原图
+            rotate_angle: 旋转角度
+            reverse_image: 反转图片
         """
         image = self.image
         if use_original_image:
@@ -52,10 +54,11 @@ class BaseGameSprite(Sprite):
         # 添加游动的效果
         if self.frame_count % 10 == 0:
             # 每隔一定帧数切换图像
-            # self.image = pygame.transform.flip(self.image, True, False)  # 反转模拟游动
-
             scale_factor = 1
-            self.image = pygame.transform.rotozoom(image, 1, scale_factor)  # 缩放、旋转1度模拟游动
+            self.image = pygame.transform.rotozoom(image, rotate_angle, scale_factor)  # 缩放、旋转1度模拟游动
+
+            if reverse_image:
+                self.image = pygame.transform.flip(image, True, False)  # 反转模拟游动
 
         else:
             # 还原
@@ -165,15 +168,24 @@ class DragonSprite(BaseGameSprite):
             # 超出边界
             return
 
-        if keys[pygame.K_LEFT]:
+        move_keys = [
+            pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT,
+            pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d
+        ]
+        for move_key in move_keys:
+            if keys[move_key]:
+                # 移动了则去除鼠标点击的位置，避免移动冲突
+                dragon_game_obj.player_target = None
+
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.move_direct = MoveDirection.LEFT
             self.rect.x -= self.speed
 
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.move_direct = MoveDirection.RIGHT
             self.rect.x += self.speed
 
-        if keys[pygame.K_UP]:
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
             if self.move_direct in [MoveDirection.RIGHT, MoveDirection.RIGHT_UP, MoveDirection.RIGHT_DOWN]:
                 # 右上
                 self.move_direct = MoveDirection.RIGHT_UP
@@ -181,7 +193,7 @@ class DragonSprite(BaseGameSprite):
                 self.move_direct = MoveDirection.UP
             self.rect.y -= self.speed
 
-        if keys[pygame.K_DOWN]:
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             if self.move_direct in [MoveDirection.RIGHT, MoveDirection.RIGHT_DOWN, MoveDirection.RIGHT_UP]:
                 # 右下
                 self.move_direct = MoveDirection.RIGHT_DOWN
@@ -198,6 +210,8 @@ class DragonSprite(BaseGameSprite):
 
         # 游动特效
         self.move_animate(use_original_image=False)
+
+        # todo 升级变大回血
 
 
 class FishSprite(BaseGameSprite):
@@ -242,7 +256,8 @@ class FishSprite(BaseGameSprite):
 
         if self.rect.x < -60 or self.rect.x > dragon_game_obj.game_width + 60:
             # 超出边界
-            dragon_game_obj.game_sprites.remove(self)
+            # dragon_game_obj.game_sprites.remove(self)
+            self.kill()
             return
 
         self.move_animate()
@@ -253,10 +268,31 @@ class TreasureSprite(BaseGameSprite):
     init_score = 10
     init_lucky_value = 5
 
-    def __init__(self, image_path):
+    def __init__(self, image_path, level=1):
         super().__init__(image_path)
+        self.level = level
         self.score = self.init_score + 5 * (self.level - 1)
         self.lucky_value = self.init_lucky_value * self.level
+        self.speed = random.randint(0, self.level + 1)
+        self.end_frame_count = 10 * GAME_FPS
+
+    def random_pos(self, game_width, game_height):
+        if self.speed:
+            self.rect.x = random.randint(10, game_width - 10)
+            self.rect.y = random.randint(-50, 100)
+        else:
+            self.rect.x = random.randint(10, game_width - 10)
+            self.rect.y = game_height
+
+    def update(self, *args, dragon_game_obj=None, **kwargs):
+        if self.frame_count >= self.end_frame_count:
+            self.kill()
+            return
+
+        if self.speed and self.rect.y < dragon_game_obj.game_height:
+            self.rect.y += self.speed
+
+        self.move_animate()
 
 
 class ObstacleSprite(BaseGameSprite):
@@ -281,7 +317,8 @@ class RaindropSprite(ObstacleSprite):
 
     def update(self, *args: Any, dragon_game_obj=None, **kwargs: Any) -> None:
         if self.frame_count >= self.end_frame_count:
-            dragon_game_obj.game_sprites.remove(self)
+            # dragon_game_obj.game_sprites.remove(self)
+            self.kill()
             return
 
         self.move_animate()
@@ -307,7 +344,8 @@ class FallingRocksSprite(ObstacleSprite):
 
         if self.rect.y > dragon_game_obj.game_height + 10:
             # 超出边界
-            dragon_game_obj.game_sprites.remove(self)
+            # dragon_game_obj.game_sprites.remove(self)
+            self.kill()
             return
 
         self.move_animate()
@@ -325,10 +363,12 @@ class WaterVortexSprite(ObstacleSprite):
 
     def update(self, *args: Any, dragon_game_obj=None, **kwargs: Any) -> None:
         if self.frame_count >= self.end_frame_count:
-            dragon_game_obj.game_sprites.remove(self)
+            # dragon_game_obj.game_sprites.remove(self)
+            self.kill()
             return
 
-        self.move_animate()
+        self.move_animate(rotate_angle=3, reverse_image=True)
 
 
 OBSTACLE_SPRITES = [RaindropSprite, FallingRocksSprite, WaterVortexSprite]
+# OBSTACLE_SPRITES = [WaterVortexSprite]
