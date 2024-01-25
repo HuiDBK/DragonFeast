@@ -4,13 +4,14 @@
 # @Desc: { 游戏精灵 }
 # @Date: 2024/01/22 15:48
 import math
+import os
 import random
 from typing import Any
 
 import pygame
 from pygame.sprite import Sprite
 
-from src.game_settings import MoveDirection
+from src.game_settings import MoveDirection, GAME_FPS, OBSTACLE_DIR
 
 
 class BaseGameSprite(Sprite):
@@ -61,9 +62,6 @@ class BaseGameSprite(Sprite):
             self.image = image
 
         self.frame_count += 1
-        if self.frame_count >= 60:
-            # 重置帧计数
-            self.frame_count = 0
 
 
 class DragonSprite(BaseGameSprite):
@@ -102,7 +100,7 @@ class DragonSprite(BaseGameSprite):
 
         # 规范化角度到0到360之间
         angle = (angle + 360) % 360
-        print("angle", angle)
+        # print("angle", angle)
 
         # 根据角度判断朝向
         if 22.5 <= angle < 67.5:
@@ -152,8 +150,20 @@ class DragonSprite(BaseGameSprite):
         self.rect.x += step_x
         self.rect.y += step_y
 
-    def move_dragon(self, keys):
+    def check_beyond_screen(self, game_width, game_height):
+        """超出屏幕检测"""
+        if (self.rect.x < 0 or self.rect.x > game_width) or \
+                (self.rect.y < 0 or self.rect.y > game_height):
+            return True
+
+        return False
+
+    def move_dragon(self, keys, dragon_game_obj):
         """移动小龙"""
+
+        if self.check_beyond_screen(dragon_game_obj.game_width, dragon_game_obj.game_height):
+            # 超出边界
+            return
 
         if keys[pygame.K_LEFT]:
             self.move_direct = MoveDirection.LEFT
@@ -179,9 +189,9 @@ class DragonSprite(BaseGameSprite):
                 self.move_direct = MoveDirection.DOWN
             self.rect.y += self.speed
 
-    def update(self, *args, keys=None, **kwargs):
+    def update(self, *args, keys=None, dragon_game_obj=None, **kwargs):
 
-        self.move_dragon(keys)
+        self.move_dragon(keys, dragon_game_obj)
 
         # 根据移动方向更新图像
         self.image = self.images[self.move_direct]
@@ -223,12 +233,17 @@ class FishSprite(BaseGameSprite):
 
         self.rect.y = random.randint(0, game_height)
 
-    def update(self, *args: Any, **kwargs: Any):
+    def update(self, *args: Any, dragon_game_obj=None, **kwargs: Any):
         """根据移动方向自动移动"""
         if self.move_direct == MoveDirection.LEFT:
             self.rect.x -= self.speed
         elif self.move_direct == MoveDirection.RIGHT:
             self.rect.x += self.speed
+
+        if self.rect.x < -60 or self.rect.x > dragon_game_obj.game_width + 60:
+            # 超出边界
+            dragon_game_obj.game_sprites.remove(self)
+            return
 
         self.move_animate()
 
@@ -246,6 +261,74 @@ class TreasureSprite(BaseGameSprite):
 
 class ObstacleSprite(BaseGameSprite):
     """障碍物"""
+    image_path = None
+    random_num = 10  # 随机生成的数量
+
+    def __init__(self, image_path=None):
+        image_path = image_path or self.image_path
+        super().__init__(image_path)
+
+
+class RaindropSprite(ObstacleSprite):
+    """落雨障碍物"""
+    image_path = os.path.join(OBSTACLE_DIR, "雨滴.png")
+    random_num = 50
+
+    def __init__(self, image_path=None):
+        super().__init__(image_path)
+        self.attack_value = 2
+        self.end_frame_count = 3 * GAME_FPS  # 结束的帧数
+
+    def update(self, *args: Any, dragon_game_obj=None, **kwargs: Any) -> None:
+        if self.frame_count >= self.end_frame_count:
+            dragon_game_obj.game_sprites.remove(self)
+            return
+
+        self.move_animate()
+
+
+class FallingRocksSprite(ObstacleSprite):
+    """落石障碍物"""
+    image_path = os.path.join(OBSTACLE_DIR, "石头.png")
+    random_num = 15
 
     def __init__(self, image_path):
         super().__init__(image_path)
+        self.attack_value = 5
+        self.speed = random.randint(2, 5)
+
+    def random_pos(self, game_width, game_height):
+        """上方 -50 - 100处随机位置下落"""
+        self.rect.x = random.randint(10, game_width - 10)
+        self.rect.y = random.randint(-50, 100)
+
+    def update(self, *args: Any, dragon_game_obj=None, **kwargs: Any) -> None:
+        self.rect.y += self.speed
+
+        if self.rect.y > dragon_game_obj.game_height + 10:
+            # 超出边界
+            dragon_game_obj.game_sprites.remove(self)
+            return
+
+        self.move_animate()
+
+
+class WaterVortexSprite(ObstacleSprite):
+    """水旋涡障碍物"""
+    image_path = os.path.join(OBSTACLE_DIR, "旋涡.png")
+    random_num = 10
+
+    def __init__(self, image_path):
+        super().__init__(image_path)
+        self.attack_value = 10
+        self.end_frame_count = 2 * GAME_FPS  # 结束的帧数
+
+    def update(self, *args: Any, dragon_game_obj=None, **kwargs: Any) -> None:
+        if self.frame_count >= self.end_frame_count:
+            dragon_game_obj.game_sprites.remove(self)
+            return
+
+        self.move_animate()
+
+
+OBSTACLE_SPRITES = [RaindropSprite, FallingRocksSprite, WaterVortexSprite]

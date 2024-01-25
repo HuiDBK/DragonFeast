@@ -4,14 +4,13 @@
 # @Desc: { 游戏配置 }
 # @Date: 2024/01/22 15:48
 import os
-
-# 项目基准目录
 import pygame
 
+# 项目基准目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # 游戏标题
-GAME_TITLE = "小鲤鱼寻宝记"
+GAME_TITLE = "小鲤鱼成龙记"
 
 # 游戏屏幕宽高
 GAME_SCREEN = (1400, 800)
@@ -22,11 +21,21 @@ GAME_FPS = 30
 # 游戏素材目录
 IMAGES_DIR = os.path.join(BASE_DIR, "res/images")
 
+# 玩家角色目录
+PLAYER_DIR = os.path.join(IMAGES_DIR, "player")
+
 # 海洋生物目录
 FISH_DIR = os.path.join(IMAGES_DIR, "fish")
 
+# 障碍物目录
+OBSTACLE_DIR = os.path.join(IMAGES_DIR, "obstacle")
+
+# 宝物目录
+TREASURE_DIR = os.path.join(IMAGES_DIR, "treasure")
+
 # 游戏主角色
-PLAYER_IMG = os.path.join(IMAGES_DIR, "fish_player.png")
+FISH_PLAYER_IMG = os.path.join(PLAYER_DIR, "fish_player.png")
+DRAGON_PLAYER_IMG = os.path.join(PLAYER_DIR, "dragon_player.png")
 
 # 游戏背景图
 BG_IMAGES = [
