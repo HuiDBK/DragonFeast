@@ -75,7 +75,7 @@ class DragonSprite(BaseGameSprite):
     distance_threshold = 1e-6
 
     # 设置一个足够小的值，表示小龙已经非常接近目标点
-    close_enough_threshold = 3
+    close_enough_threshold = 2
 
     def __init__(self, image_path):
         super().__init__(image_path)
@@ -123,10 +123,11 @@ class DragonSprite(BaseGameSprite):
         else:
             return MoveDirection.RIGHT
 
-    def move_to(self, target):
+    def move_to(self, target_pos):
+        """移动到目标位置"""
         # 计算两点之间的直线路径
         x1, y1 = self.rect.x, self.rect.y
-        x2, y2 = target
+        x2, y2 = target_pos
         distance = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
 
         # print(distance)

@@ -179,6 +179,7 @@ class DragonFeast:
                 # 吃到宝物处理
                 self.dragon_sprite.score += collided_sprite.score
                 self.dragon_sprite.lucky_value += collided_sprite.lucky_value
+                collided_sprite.kill()
 
     def game_replay(self):
         """游戏重玩"""
