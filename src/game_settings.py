@@ -34,7 +34,7 @@ OBSTACLE_DIR = os.path.join(IMAGES_DIR, "obstacle")
 TREASURE_DIR = os.path.join(IMAGES_DIR, "treasure")
 
 # 游戏主角色
-FISH_PLAYER_IMG = os.path.join(PLAYER_DIR, "fish_player.png")
+FISH_PLAYER_IMG = os.path.join(PLAYER_DIR, "fish_player2.png")
 DRAGON_PLAYER_IMG = os.path.join(PLAYER_DIR, "dragon_player.png")
 
 # 游戏背景图
