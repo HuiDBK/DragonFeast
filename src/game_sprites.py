@@ -39,6 +39,11 @@ class BaseGameSprite(Sprite):
         self.rect.x = random.randint(0, game_width)
         self.rect.y = random.randint(0, game_height)
 
+    def random_top_pos(self, game_width, offset_x=10, offset_y=80):
+        """随机游戏上方位置"""
+        self.rect.x = random.randint(offset_x, game_width - offset_x)
+        self.rect.y = random.randint(-50, offset_y)
+
     def move_animate(self, use_original_image=True, rotate_angle=1, reverse_image=False):
         """
         模拟游动特效
@@ -296,6 +301,29 @@ class TreasureSprite(BaseGameSprite):
         self.move_animate()
 
 
+class BonusSprite(BaseGameSprite):
+    """奖励关卡"""
+
+    def __init__(self, image_path):
+        super().__init__(image_path)
+        self.score = 1
+        self.speed = random.randint(5, 10)
+
+    def random_pos(self, game_width, game_height):
+        self.random_top_pos(game_width)
+
+    def update(self, *args: Any, dragon_game_obj=None, **kwargs: Any) -> None:
+        self.rect.y += self.speed
+
+        if self.rect.y > dragon_game_obj.game_height + 10:
+            # 超出边界
+            # dragon_game_obj.game_sprites.remove(self)
+            self.kill()
+            return
+
+        self.move_animate()
+
+
 class ObstacleSprite(BaseGameSprite):
     """障碍物"""
     image_path = None
@@ -336,9 +364,8 @@ class FallingRocksSprite(ObstacleSprite):
         self.speed = random.randint(2, 5)
 
     def random_pos(self, game_width, game_height):
-        """上方 -50 - 100处随机位置下落"""
-        self.rect.x = random.randint(10, game_width - 10)
-        self.rect.y = random.randint(-50, 100)
+        """上方处随机位置下落"""
+        self.random_top_pos(game_width)
 
     def update(self, *args: Any, dragon_game_obj=None, **kwargs: Any) -> None:
         self.rect.y += self.speed

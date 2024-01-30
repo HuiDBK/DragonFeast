@@ -33,16 +33,40 @@ OBSTACLE_DIR = os.path.join(IMAGES_DIR, "obstacle")
 # 宝物目录
 TREASURE_DIR = os.path.join(IMAGES_DIR, "treasure")
 
+# 奖励素材目录
+BONUS_DIR = os.path.join(IMAGES_DIR, "bonus")
+
+# BOSS素材目录
+BOSS_DIR = os.path.join(IMAGES_DIR, "boss")
+
 # 游戏主角色
 FISH_PLAYER_IMG = os.path.join(PLAYER_DIR, "fish_player2.png")
 DRAGON_PLAYER_IMG = os.path.join(PLAYER_DIR, "dragon_player.png")
 
 # 游戏背景图
 BG_IMAGES = [
-    *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg_blue.png"))] * 5,
+    *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg_blue.png"))] * 10,
     *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg0.jpg"))] * 5,
     *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg1.jpg"))] * 5,
     *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg2.jpg"))] * 5,
+]
+
+# 奖励关卡背景图
+BG_BONUS_IMAGES = [
+    *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg_blue.png"))] * 10,
+    *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg0.jpg"))] * 5,
+]
+
+# 幸运关卡背景图
+BG_LUCKY_IMAGES = [
+    *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg_blue.png"))] * 10,
+    *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg0.jpg"))] * 5,
+]
+
+# BOSS关卡背景图
+BG_BOOS_IMAGES = [
+    *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg_blue.png"))] * 10,
+    *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg0.jpg"))] * 5,
 ]
 
 
@@ -56,3 +80,11 @@ class MoveDirection:
     LEFT_DOWN = "left_down"
     RIGHT_UP = "right_up"
     RIGHT_DOWN = "right_down"
+
+
+class GameModel:
+    """游戏模式"""
+    NORMAL = "normal"  # 普通
+    BONUS = "bonus"  # 普通奖励
+    LUCKY = "lucky"  # 幸运奖励
+    BOSS = "boss"  # boos模式
