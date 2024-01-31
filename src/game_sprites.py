@@ -77,10 +77,12 @@ class DragonSprite(BaseGameSprite):
     init_hp = 30
     init_speed = 5
 
-    distance_threshold = 1e-6
+    distance_threshold = 1
 
     # 设置一个足够小的值，表示小龙已经非常接近目标点
-    close_enough_threshold = 2
+    close_enough_threshold = 3
+
+    max_level = 6  # 最大等级
 
     def __init__(self, image_path):
         super().__init__(image_path)
@@ -89,15 +91,21 @@ class DragonSprite(BaseGameSprite):
         self.defense_value = 5
         self.speed = self.level * self.init_speed
         self.move_direct = MoveDirection.LEFT
+        self.hp = self.init_hp
 
         # 初始化各个方位的图像
-        self.images = {
-            MoveDirection.LEFT: self.image,
-            MoveDirection.RIGHT: pygame.transform.flip(self.image, True, False),
-            MoveDirection.UP: pygame.transform.rotozoom(self.image, -30, 1),
-            MoveDirection.DOWN: pygame.transform.rotozoom(self.image, 30, 1),
-            MoveDirection.RIGHT_UP: pygame.transform.flip(pygame.transform.rotozoom(self.image, -30, 1), True, False),
-            MoveDirection.RIGHT_DOWN: pygame.transform.flip(pygame.transform.rotozoom(self.image, 30, 1), True, False),
+        self.images = self.get_direct_image()
+
+    def get_direct_image(self):
+        return {
+            MoveDirection.LEFT: self.original_image,
+            MoveDirection.RIGHT: pygame.transform.flip(self.original_image, True, False),
+            MoveDirection.UP: pygame.transform.rotozoom(self.original_image, -30, 1),
+            MoveDirection.DOWN: pygame.transform.rotozoom(self.original_image, 30, 1),
+            MoveDirection.RIGHT_UP: pygame.transform.flip(
+                pygame.transform.rotozoom(self.original_image, -30, 1), True, False),
+            MoveDirection.RIGHT_DOWN: pygame.transform.flip(
+                pygame.transform.rotozoom(self.original_image, 30, 1), True, False),
         }
 
     @staticmethod
@@ -135,7 +143,8 @@ class DragonSprite(BaseGameSprite):
         x2, y2 = target_pos
         distance = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
 
-        # print(distance)
+        # print("distance", distance)
+        # print("distance_threshold", self.distance_threshold)
         if distance < self.distance_threshold:
             # 距离小于阈值直接返回
             return
@@ -143,7 +152,7 @@ class DragonSprite(BaseGameSprite):
         # 如果小龙非常接近目标点，直接返回
         # print("rect.x", self.rect.x, "rect.y", self.rect.y)
         # print("target.x", x2, "target.y", y2)
-        if (abs(self.rect.x - x2) < self.close_enough_threshold or
+        if (abs(self.rect.x - x2) < self.close_enough_threshold and
                 abs(self.rect.y - y2) < self.close_enough_threshold):
             return
 
@@ -207,6 +216,34 @@ class DragonSprite(BaseGameSprite):
                 self.move_direct = MoveDirection.DOWN
             self.rect.y += self.speed
 
+    def sprite_upgrade(self):
+        """
+        精灵升级
+        角色变大 10%（会失真）todo 不缩放根据分数范围直接换图片
+        血量值 = 等级 * 初始血量后提升10%
+        攻击提升 20%
+        防御值提升 10%
+        速度提升 20%
+        """
+        cur_level = min((self.score // 10) + 1, self.max_level)
+        if cur_level > self.level:
+            self.level = cur_level
+            # print("dragon sprite level :", self.level)
+
+            self.image = pygame.transform.rotozoom(self.image, 0, 1.1)
+            self.original_image = pygame.transform.rotozoom(self.original_image, 0, 1.1)
+            self.images = self.get_direct_image()
+            rect_x = self.rect.x
+            rect_y = self.rect.y
+            self.rect = self.image.get_rect()
+            self.rect.x = rect_x
+            self.rect.y = rect_y
+
+            self.hp = self.init_hp * self.level * 1.1
+            self.attack_value = self.attack_value * 1.2
+            self.defense_value = self.defense_value * 1.1
+            self.speed = self.speed * 1.2
+
     def update(self, *args, keys=None, dragon_game_obj=None, **kwargs):
 
         self.move_dragon(keys, dragon_game_obj)
@@ -217,13 +254,14 @@ class DragonSprite(BaseGameSprite):
         # 游动特效
         self.move_animate(use_original_image=False)
 
-        # todo 升级变大回血
+        # 升级变大回血、加属性值
+        self.sprite_upgrade()
 
 
 class FishSprite(BaseGameSprite):
     """海洋生物"""
     init_hp = 20
-    init_score = 20
+    init_score = 2
     init_attack_value = 5
     init_defense_value = 3
     init_speed = 1.5
@@ -234,6 +272,7 @@ class FishSprite(BaseGameSprite):
         self.defense_value = self.init_defense_value * self.level
         self.score = self.init_score * self.level
         self.speed = self.level * self.init_speed
+        self.hp = self.init_hp * self.level
 
         # 移动方向
         self.move_direct = random.choice([MoveDirection.LEFT, MoveDirection.RIGHT])

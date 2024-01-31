@@ -27,9 +27,10 @@ class DragonFeast:
     MAX_LUCKY_SCORE = 100  # 最大幸运值，满了进入幸运关卡模式
     MAX_GAME_LEVEL = 6  # 最大游戏关卡
 
-    BONUS_DURATION = 10 # 奖励关卡时长 10s
+    BONUS_DURATION = 10  # 奖励关卡时长 10s
 
     def __init__(self, game_title: str, screen_info: tuple, game_fps: int = 60):
+        pygame.init()
         self.game_title = game_title
         self.game_fps = game_fps
         self.game_width, self.game_height = screen_info
@@ -68,7 +69,7 @@ class DragonFeast:
     def init_game_material(self, game_title=None):
         """初始化游戏素材"""
         self.game_title = game_title or self.game_title
-        self.game_sprites.clear(self.game_screen)
+        self.game_sprites.empty()
         self.setup_game_screen()
         self.init_player()
 
@@ -100,7 +101,7 @@ class DragonFeast:
         }
 
         for i in range(num):
-            random_fish_level = random.choice[range(min_level, max_level)]
+            random_fish_level = random.choice(range(min_level, max_level))
             if (i + 1) % 6 == 0:
                 # 最高等级海洋生物
                 random_fish_level = max_level
@@ -143,7 +144,7 @@ class DragonFeast:
 
     def init_player(self):
         """初始化玩家（小鲤鱼）"""
-        self.dragon_sprite = DragonSprite(image_path=game_settings.FISH_PLAYER_IMG)
+        self.dragon_sprite = self.dragon_sprite or DragonSprite(image_path=game_settings.FISH_PLAYER_IMG)
 
         # 居中
         self.dragon_sprite.rect.x = (self.game_width - self.dragon_sprite.rect.width) // 2
@@ -216,6 +217,7 @@ class DragonFeast:
         if self.dragon_sprite.lucky_value >= self.MAX_LUCKY_SCORE:
             self.dragon_sprite.lucky_value = 0
             self.game_model = GameModel.LUCKY
+            self.bg_img = random.choice(game_settings.BG_LUCKY_IMAGES)
             self.bonus_entry_time = int(time.time())
             self.init_game_material(game_title="幸运奖励关卡")
             return
@@ -223,6 +225,7 @@ class DragonFeast:
         if self.bonus_score >= self.MAX_BONUS_SCORE:
             self.bonus_score = 0
             self.game_model = GameModel.BONUS  # 开启奖励模式
+            self.bg_img = random.choice(game_settings.BG_BONUS_IMAGES)
             self.bonus_entry_time = int(time.time())
             self.init_game_material(game_title="普通奖励关卡")
             return
@@ -231,6 +234,7 @@ class DragonFeast:
             # 下一关
             self.game_level = calc_game_level
             self.bg_img = random.choice(game_settings.BG_IMAGES)
+            self.init_game_material()
 
     def collision_check(self):
         """碰撞检测"""
@@ -333,14 +337,12 @@ class DragonFeast:
         # 随机宝物
         self.random_treasure()
 
-    def render_bonus_model(self, bg_images=game_settings.BG_BONUS_IMAGES, img_dir=game_settings.BONUS_DIR):
+    def render_bonus_model(self, img_dir=game_settings.BONUS_DIR):
         """渲染奖励模式"""
-        self.bg_img = random.choice(bg_images)
-
         # 每2秒随机奖励物品
         cur_time = int(time.time())
         if cur_time > self.last_gen_time and (cur_time - self.bonus_entry_time) % 2 == 0:
-            bonus_images = random.choice(get_file_list(img_dir))
+            bonus_images = get_file_list(img_dir)
             for i in range(random.randint(15, 20)):
                 bonus_img = random.choice(bonus_images)
                 bonus_sprite = BonusSprite(bonus_img)
@@ -351,7 +353,7 @@ class DragonFeast:
     def render_lucky_model(self):
         """渲染幸运模式"""
         # fixme 目前与普通奖励模式逻辑一样，先复用，不同再优化
-        self.render_bonus_model(bg_images=game_settings.BG_LUCKY_IMAGES, img_dir=game_settings.TREASURE_DIR)
+        self.render_bonus_model(img_dir=game_settings.TREASURE_DIR)
 
     def render_boos_model(self):
         """渲染boss模式"""
@@ -362,6 +364,18 @@ class DragonFeast:
         render_method = self.game_model_render_mapping.get(self.game_model)
         render_method()
 
+    def render_score_and_level(self):
+        """渲染游戏关卡等级、分数、幸运值"""
+        font = pygame.font.Font(None, 36)
+        level_text = font.render(f"Level: {self.game_level}", True, (255, 255, 255))
+        score_text = font.render(f"Score: {self.dragon_sprite.score}", True, (255, 255, 255))
+        lucky_text = font.render(f"Lucky: {self.dragon_sprite.lucky_value}", True, (255, 255, 255))
+
+        # 渲染在屏幕左上角
+        self.game_screen.blit(level_text, (10, 10))
+        self.game_screen.blit(score_text, (10, 50))
+        self.game_screen.blit(lucky_text, (10, 90))
+
     def render_game(self):
         """游戏渲染"""
 
@@ -371,10 +385,11 @@ class DragonFeast:
         if self.player_target:
             self.dragon_sprite.move_to(self.player_target)
 
-        # todo 渲染游戏分数、幸运值
-
         # 绘制背景
         self.game_screen.blit(source=self.bg_img, dest=(0, 0))
+
+        # 渲染游戏关卡等级、分数、幸运值
+        self.render_score_and_level()
 
         # 绘制游戏精灵
         self.draw_game_sprite()
