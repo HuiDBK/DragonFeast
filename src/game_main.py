@@ -176,9 +176,9 @@ class DragonFeast:
 
             if (fish_sprite.level - self.dragon_sprite.level) <= 1:
                 # 只能越一级攻击
-                fish_sprite.hp -= (self.dragon_sprite.attack_value - fish_sprite.defense_value)
+                fish_sprite.hp -= min(self.dragon_sprite.attack_value - fish_sprite.defense_value, 0)
 
-            self.dragon_sprite.hp -= (fish_sprite.attack_value - self.dragon_sprite.defense_value)
+            self.dragon_sprite.hp -= min(fish_sprite.attack_value - self.dragon_sprite.defense_value, 0)
 
     def game_over_check(self):
         """
@@ -246,7 +246,7 @@ class DragonFeast:
                 self.eat_fish(fish_sprite=collided_sprite)
             elif isinstance(collided_sprite, ObstacleSprite):
                 # 碰到障碍物处理
-                self.dragon_sprite.hp -= (collided_sprite.attack_value - self.dragon_sprite.defense_value)
+                self.dragon_sprite.hp -= collided_sprite.attack_value
                 collided_sprite.kill()
             elif isinstance(collided_sprite, TreasureSprite):
                 # 吃到宝物处理
@@ -364,17 +364,22 @@ class DragonFeast:
         render_method = self.game_model_render_mapping.get(self.game_model)
         render_method()
 
-    def render_score_and_level(self):
-        """渲染游戏关卡等级、分数、幸运值"""
+    def render_score_and_attribute(self):
+        """渲染游戏关卡等级、分数、幸运值、角色属性"""
         font = pygame.font.Font(None, 36)
         level_text = font.render(f"Level: {self.game_level}", True, (255, 255, 255))
         score_text = font.render(f"Score: {self.dragon_sprite.score}", True, (255, 255, 255))
         lucky_text = font.render(f"Lucky: {self.dragon_sprite.lucky_value}", True, (255, 255, 255))
+        total_hp = self.dragon_sprite.init_hp
+        if self.dragon_sprite.level > 1:
+            total_hp = self.dragon_sprite.init_hp * self.dragon_sprite.level * 1.1
+        hp = font.render(f"HP: {self.dragon_sprite.hp} / {total_hp}", True, (255, 255, 255))
 
         # 渲染在屏幕左上角
         self.game_screen.blit(level_text, (10, 10))
         self.game_screen.blit(score_text, (10, 50))
         self.game_screen.blit(lucky_text, (10, 90))
+        self.game_screen.blit(hp, (10, 130))
 
     def render_game(self):
         """游戏渲染"""
@@ -388,8 +393,8 @@ class DragonFeast:
         # 绘制背景
         self.game_screen.blit(source=self.bg_img, dest=(0, 0))
 
-        # 渲染游戏关卡等级、分数、幸运值
-        self.render_score_and_level()
+        # 渲染游戏关卡等级、分数、幸运值、角色属性
+        self.render_score_and_attribute()
 
         # 绘制游戏精灵
         self.draw_game_sprite()

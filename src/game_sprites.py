@@ -83,6 +83,7 @@ class DragonSprite(BaseGameSprite):
     close_enough_threshold = 3
 
     max_level = 6  # 最大等级
+    score_upgrade = 100   # 每100分升级
 
     def __init__(self, image_path):
         super().__init__(image_path)
@@ -225,7 +226,7 @@ class DragonSprite(BaseGameSprite):
         防御值提升 10%
         速度提升 20%
         """
-        cur_level = min((self.score // 10) + 1, self.max_level)
+        cur_level = min((self.score // self.score_upgrade) + 1, self.max_level)
         if cur_level > self.level:
             self.level = cur_level
             # print("dragon sprite level :", self.level)
