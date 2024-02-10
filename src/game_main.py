@@ -23,7 +23,7 @@ def get_file_list(dir_path):
 
 class DragonFeast:
     GAME_PASS_SCORE = 120  # 游戏每120分关卡升级
-    MAX_BONUS_SCORE = 30  # 最大奖励值，满了进入奖励关卡模式
+    MAX_BONUS_SCORE = 10  # 最大奖励值，满了进入奖励关卡模式
     MAX_LUCKY_SCORE = 100  # 最大幸运值，满了进入幸运关卡模式
     MAX_GAME_LEVEL = 6  # 最大游戏关卡
 
@@ -154,6 +154,8 @@ class DragonFeast:
 
     def eat_fish(self, fish_sprite: FishSprite):
         """吃鱼处理"""
+        print("fish", fish_sprite.level)
+        print("dragon", self.dragon_sprite.level)
 
         # 判断鱼的等级
         if fish_sprite.level < self.dragon_sprite.level:
@@ -176,9 +178,9 @@ class DragonFeast:
 
             if (fish_sprite.level - self.dragon_sprite.level) <= 1:
                 # 只能越一级攻击
-                fish_sprite.hp -= min(self.dragon_sprite.attack_value - fish_sprite.defense_value, 0)
+                fish_sprite.hp -= max(self.dragon_sprite.attack_value - fish_sprite.defense_value, 0)
 
-            self.dragon_sprite.hp -= min(fish_sprite.attack_value - self.dragon_sprite.defense_value, 0)
+            self.dragon_sprite.hp -= max(fish_sprite.attack_value - self.dragon_sprite.defense_value, 0)
 
     def game_over_check(self):
         """
