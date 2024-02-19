@@ -9,9 +9,8 @@
 - 宝物每隔26秒、分数整除66，上方掉落宝物
 - 每隔15秒、随机障碍物
 
-详细设计请看：
-
-有些游戏功能还未试实现...
+游戏结束：空格重玩、esc退出
+详细设计请看：https://juejin.cn/post/7336887570977308711
 
 # 游戏启动
 ## 安装依赖
@@ -23,3 +22,19 @@ pip install -r requirements.txt
 ```python
 python main.py
 ```
+
+## todo list
+- 血量、幸运、奖励值，数值转进度条样子
+- 游戏特效优化
+- Boss 模式
+
+## 效果展示
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8f3594b3011a4961b54b15dcf1d125ac~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=3024&h=1880&s=2030317&e=png&a=1&b=011421)
+
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f5fbccb25d8f414886d658468e9413dd~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=3024&h=1880&s=5521183&e=png&a=1&b=175680)
+
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/92f2b950b7b5493fb1f572cc5ff09cbe~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=3024&h=1880&s=2210491&e=png&a=1&b=011421)
+
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8f52011d67914abd90521f1ac986b822~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=3024&h=1880&s=2102012&e=png&a=1&b=011421)
+
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d910849fc9af45c7ba39a26fd9e792d2~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=3024&h=1880&s=2002957&e=png&a=1&b=00131e)
