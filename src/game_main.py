@@ -23,7 +23,7 @@ def get_file_list(dir_path):
 
 class DragonFeast:
     GAME_PASS_SCORE = 120  # 游戏每120分关卡升级
-    MAX_BONUS_SCORE = 10  # 最大奖励值，满了进入奖励关卡模式
+    MAX_BONUS_SCORE = 30  # 最大奖励值，满了进入奖励关卡模式
     MAX_LUCKY_SCORE = 100  # 最大幸运值，满了进入幸运关卡模式
     MAX_GAME_LEVEL = 6  # 最大游戏关卡
 
@@ -266,6 +266,7 @@ class DragonFeast:
         """游戏重玩"""
         self.game_level = 1
         self.is_gen_fish = True
+        self.is_running = False
         self.is_game_over = False
         self.init_game_material()
 
@@ -286,12 +287,12 @@ class DragonFeast:
 
             if self.is_game_over:
                 # 游戏结束， 空格重玩，esc 退出
-                if event.type == pygame.K_SPACE:
-                    self.game_replay()
-
-                elif event.type == pygame.K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.game_replay()
+                    elif event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
 
     def draw_game_sprite(self):
         keys = pygame.key.get_pressed()
@@ -419,7 +420,26 @@ class DragonFeast:
         self.game_screen.blit(score_text, (10, 50))
         self.game_screen.blit(bonus_text, (10, 90))
         self.game_screen.blit(lucky_text, (10, 130))
-        self.game_screen.blit(hp, (10, 130))
+        self.game_screen.blit(hp, (10, 170))
+
+    def render_game_over(self):
+        """渲染游戏结束"""
+        font = pygame.font.Font(None, 80)
+        game_over_text = font.render(f"Game Over", True, (255, 255, 255))
+        tip_text = pygame.font.Font(None, 30).render("space replay esc exit", True, (255, 255, 255))
+        game_over_rect = game_over_text.get_rect()
+        tip_text_rect = game_over_text.get_rect()
+
+        # 渲染在屏幕中央
+        centerx = self.game_width // 2
+        centery = self.game_height // 2
+        game_over_rect.centerx = centerx
+        game_over_rect.centery = centery
+        tip_text_rect.centerx = centerx + 45
+        tip_text_rect.centery = centery + 80
+        self.game_screen.blit(game_over_text, game_over_rect)
+        self.game_screen.blit(tip_text, tip_text_rect)
+        pygame.display.flip()
 
     def render_game(self):
         """游戏渲染"""
@@ -455,6 +475,8 @@ class DragonFeast:
 
             if self.is_game_over:
                 # 游戏结束不做游戏渲染
+                self.render_score_and_attribute()
+                self.render_game_over()
                 continue
 
             # 游戏渲染

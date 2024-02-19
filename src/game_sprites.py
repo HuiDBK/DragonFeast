@@ -240,9 +240,9 @@ class DragonSprite(BaseGameSprite):
             self.rect.x = rect_x
             self.rect.y = rect_y
 
-            self.hp = self.init_hp * self.level * 1.1
-            self.attack_value = self.attack_value * 1.2
-            self.defense_value = self.defense_value * 1.1
+            self.hp = int(self.init_hp * self.level * 1.1)
+            self.attack_value = int(self.attack_value * 1.2)
+            self.defense_value = int(self.defense_value * 1.1)
             self.speed = self.speed * 1.2
 
     def update(self, *args, keys=None, dragon_game_obj=None, **kwargs):
