@@ -45,6 +45,7 @@ class DragonFeast:
         self.is_gen_fish = True  # 是否生成鱼
         self.is_gen_obstacle = False  # 是否生成障碍物
         self.is_gen_treasure = False  # 是否生成宝物
+        self.is_running = False  # 是否开启游戏
         self.is_game_over = False  # 是否游戏结束
         self.bonus_score = 0  # 奖励分数
 
@@ -197,6 +198,7 @@ class DragonFeast:
         - 每120分关卡等级+1，随机关卡背景
         - 每满 30 奖励值，进入普通奖励关卡模式
         - 每满 100 幸运值，进入成龙奖励关卡模式
+        - todo 最后一关打 Boss
         - 奖励时间结束，切换回普通模式
         """
         cur_time = time.time()
@@ -274,9 +276,13 @@ class DragonFeast:
                 sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                # 鼠标点击 记录坐标
-                pos = pygame.mouse.get_pos()
-                self.player_target = pos
+                mouse_pos = pygame.mouse.get_pos()
+                if not self.is_running:
+                    # 选择游戏玩家
+                    self.select_player(mouse_pos)
+                else:
+                    # 鼠标点击 记录坐标
+                    self.player_target = mouse_pos
 
             if self.is_game_over:
                 # 游戏结束， 空格重玩，esc 退出
@@ -326,6 +332,36 @@ class DragonFeast:
 
             self.last_gen_time = cur_time
 
+    def render_start_screen(self):
+        """渲染游戏开始界面"""
+        font = pygame.font.Font(None, 36)
+        text = font.render('Select a player:', True, (255, 255, 255))
+        self.game_screen.blit(text, (50, 50))
+
+        x_offset = 300
+        y_offset = 300
+        players = get_file_list(game_settings.PLAYER_DIR)
+        for player in players:
+            player_image = pygame.image.load(player)
+            self.game_screen.blit(player_image, (x_offset, y_offset))
+            x_offset += 200
+
+    def select_player(self, mouse_pos):
+        """选择玩家"""
+        x_offset = 300
+        y_offset = 300
+        players = get_file_list(game_settings.PLAYER_DIR)
+        for player in players:
+            player_image = pygame.image.load(player)
+            player_rect = player_image.get_rect()
+            player_rect.topleft = (x_offset, y_offset)
+            if player_rect.collidepoint(mouse_pos):
+                self.dragon_sprite = DragonSprite(image_path=player)
+                self.is_running = True
+                self.init_game_material()
+                break
+            x_offset += 200
+
     def render_normal_model(self):
         """渲染普通模式"""
         self.check_random_game_sprite()
@@ -371,6 +407,7 @@ class DragonFeast:
         font = pygame.font.Font(None, 36)
         level_text = font.render(f"Level: {self.game_level}", True, (255, 255, 255))
         score_text = font.render(f"Score: {self.dragon_sprite.score}", True, (255, 255, 255))
+        bonus_text = font.render(f"Bonus: {self.bonus_score}", True, (255, 255, 255))
         lucky_text = font.render(f"Lucky: {self.dragon_sprite.lucky_value}", True, (255, 255, 255))
         total_hp = self.dragon_sprite.init_hp
         if self.dragon_sprite.level > 1:
@@ -380,7 +417,8 @@ class DragonFeast:
         # 渲染在屏幕左上角
         self.game_screen.blit(level_text, (10, 10))
         self.game_screen.blit(score_text, (10, 50))
-        self.game_screen.blit(lucky_text, (10, 90))
+        self.game_screen.blit(bonus_text, (10, 90))
+        self.game_screen.blit(lucky_text, (10, 130))
         self.game_screen.blit(hp, (10, 130))
 
     def render_game(self):
@@ -392,9 +430,6 @@ class DragonFeast:
         if self.player_target:
             self.dragon_sprite.move_to(self.player_target)
 
-        # 绘制背景
-        self.game_screen.blit(source=self.bg_img, dest=(0, 0))
-
         # 渲染游戏关卡等级、分数、幸运值、角色属性
         self.render_score_and_attribute()
 
@@ -402,12 +437,21 @@ class DragonFeast:
         self.draw_game_sprite()
 
     def run_game(self):
+        clock = pygame.time.Clock()
         while True:
             # 设置游戏刷新帧率
-            pygame.time.Clock().tick(self.game_fps)
+            clock.tick(self.game_fps)
 
             # 游戏事件处理
             self._event_handle()
+
+            # 绘制背景
+            self.game_screen.blit(source=self.bg_img, dest=(0, 0))
+
+            if not self.is_running:
+                self.render_start_screen()
+                pygame.display.flip()
+                continue
 
             if self.is_game_over:
                 # 游戏结束不做游戏渲染

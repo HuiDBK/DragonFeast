@@ -45,7 +45,7 @@ DRAGON_PLAYER_IMG = os.path.join(PLAYER_DIR, "dragon_player.png")
 
 # 游戏背景图
 BG_IMAGES = [
-    *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg_blue.png"))] * 10,
+    *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg_blue.png"))] * 15,
     *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg0.jpg"))] * 3,
     *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg1.jpg"))] * 3,
     *[pygame.image.load(os.path.join(IMAGES_DIR, "bg/bg2.jpg"))] * 3,
